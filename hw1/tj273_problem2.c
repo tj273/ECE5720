@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
 #include <time.h>
 
 #define MAX_LENGTH 67108864
@@ -19,13 +21,12 @@ int main()
   A = (float *)malloc(sizeof(float) * MAX_LENGTH);
   
   FILE *fp;
-  fp = fopen("p2_data.txt", "w");
-  
+  fp = fopen("p2_data", "w");
   int n, s, k, i;
   float test = 0;
-  
-  uint64_t diff;
-	struct timespec start, end;
+
+  double diff;
+  struct timespec start, end;
   
   for (i = 0; i < MAX_LENGTH; i++)
     A[i] = ((float)rand()/(float)(RAND_MAX));
@@ -37,14 +38,14 @@ int main()
         for (i = 0; i < n; i = i + s)
           test = A[i];
       clock_gettime(CLOCK_MONOTONIC, &end);
-      diff = (BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec)/(n*K);
-      printf("n = %d, s = %d, elapsed time = %llu nanoseconds\n", n, s, (long long unsigned int) diff);
-      fprintf(fp, "n = %d, s = %d, elapsed time = %llu nanoseconds\n", n, s, (long long unsigned int) diff);
-    }
+      diff = (BILLION * ((double)end.tv_sec - (double)start.tv_sec) + (double)end.tv_nsec - (double)start.tv_nsec)/(n*K);
+      printf("n = %8d, s = %8d, elapsed time = %2.4lf nanoseconds\n", n, s, diff);
+      fprintf(fp, "%d, %d, %lf\n", n, s, diff);
+      }
     
   free(A);
-  
   fclose(fp);
   
   return 0;
 }
+

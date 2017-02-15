@@ -46,16 +46,17 @@ void centroid_time_test(int k)
   // variables used for time measurement
   uint64_t diff;
   uint64_t mean;
-	struct timespec start, end;
+  struct timespec start, end;
   
   printf("test for k = %d\n", k);
   /* measure monotonic time for approach 1 */
   for (t = 0; t < 10; t++){
-	  clock_gettime(CLOCK_MONOTONIC, &start);	/* mark start time */
-  
+    
     // initialize elements of array c with zero
     for (i = 0; i < k; i++)
       c[i] = 0;
+      
+	  clock_gettime(CLOCK_MONOTONIC, &start);	/* mark start time */
   
     for (i = 0; i < N; i++)
       for (j = 0; j < k; j++)
@@ -66,21 +67,22 @@ void centroid_time_test(int k)
 	  diff = diff + BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
   }
   mean = diff/10;
-	printf("approach 1 time = %llu nanoseconds\n", (long long unsigned int) mean);
+  printf("approach 1 time = %llu nanoseconds\n", (long long unsigned int) mean);
   
 
   
   /* measure monotonic time for approach 2 */
   for (t = 0; t < 10; t++){
-  	clock_gettime(CLOCK_MONOTONIC, &start);	/* mark start time */
-  
+      
     // initialize elements of array c with zero
     for (i = 0; i < k; i++)
       c[i] = 0;
+    
+    clock_gettime(CLOCK_MONOTONIC, &start);	/* mark start time */
   
-    for (j = 0; j < k; j++)
-      for (i = 0; i < N; i++)
-        c[j] = c[j] + x[i*k+j];
+    for (j = 0; j < N; j++)
+      for (i = 0; i < k; i++)
+        c[i] = c[i] + x[i*k+j];
   
 	  clock_gettime(CLOCK_MONOTONIC, &end);	/* mark the end time */
 
