@@ -1,6 +1,9 @@
 /* ECE 5720 hw1 problem 2
  * Name  : Tianze Jiang
  * Netid : tj273
+ * 
+ * % gcc -o tj273_problem2 tj273_problem2.c -lrt
+ * % ./tj273_problem2
 */
 
 #include <stdio.h>

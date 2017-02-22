@@ -1,6 +1,9 @@
 /* ECE 5720 hw1 problem 1
  * Name  : Tianze Jiang
  * Netid : tj273
+ * 
+ * % gcc -o tj273_problem1 tj273_problem1.c -lrt
+ * % ./tj273_problem1
 */
 
 #include <stdio.h>
@@ -56,15 +59,15 @@ void centroid_time_test(int k)
     for (i = 0; i < k; i++)
       c[i] = 0;
       
-	  clock_gettime(CLOCK_MONOTONIC, &start);	/* mark start time */
+    clock_gettime(CLOCK_MONOTONIC, &start);	/* mark start time */
   
     for (i = 0; i < N; i++)
       for (j = 0; j < k; j++)
         c[j] = c[j] + x[i*k+j];
   
-	  clock_gettime(CLOCK_MONOTONIC, &end);	/* mark the end time */
+    clock_gettime(CLOCK_MONOTONIC, &end);	/* mark the end time */
 
-	  diff = diff + BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
+    diff = diff + BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
   }
   mean = diff/10;
   printf("approach 1 time = %llu nanoseconds\n", (long long unsigned int) mean);
@@ -84,9 +87,9 @@ void centroid_time_test(int k)
       for (i = 0; i < k; i++)
         c[i] = c[i] + x[i*k+j];
   
-	  clock_gettime(CLOCK_MONOTONIC, &end);	/* mark the end time */
+    clock_gettime(CLOCK_MONOTONIC, &end);	/* mark the end time */
 
-	  diff = diff + BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
+    diff = diff + BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
   }
   mean = diff/10;
   printf("approach 2 time = %llu nanoseconds\n\n", (long long unsigned int) mean);
