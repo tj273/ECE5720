@@ -2,7 +2,7 @@
  * Name  : Tianze Jiang
  * Netid : tj273
  * 
- * % gcc tj273_hw2_openmp_sort.c -o tj273_openmp_sort -fopenmp
+ * % gcc tj273_hw2_openmp_sort.c -o tj273_openmp_sort -fopenmp -O3
  * % ./tj273_openmp_sort
 */
 
@@ -12,8 +12,7 @@
 #include <time.h>
 #include <omp.h>
 
-#define N 4
-#define NUM_THREADS 8
+#define N 16384
 #define BILLION 1000000000L
 
 void Merge(int *array,int *left_array,int leftCount,int *right_array,int rightCount, int *idx, int *left_idx, int *right_idx);
@@ -23,8 +22,8 @@ void RowSort_omp(int **A, int row);
 void RowSort_sequential(int **A, int row);
 void PrintArray(int **A);
 
-uint64_t time_sorto = 0;
-uint64_t time_sorts = 0;
+uint64_t time_sorto = 0; //
+uint64_t time_sorts = 0; //
 int **A;
 int **temp;
 
@@ -32,6 +31,7 @@ void main()
 {
   int i, j;
   
+  // Initialize 2-d matrix
   A = (int **) malloc (N * sizeof(int *));
   for ( i = 0; i < N; i++ )
     A[i] = (int *) malloc (N * sizeof(int));
@@ -45,12 +45,13 @@ void main()
   	for ( j = 0; j < N; j++ )
   		A[i][j] = rand()%100 - 50;
       
-  PrintArray(A);
+  //PrintArray(A);
   
+  // sort with openmp
   for (i = 0; i < N-1; i++ )
     RowSort_omp( A, i );
   
-  PrintArray(A);
+  //PrintArray(A);
   
   printf("Time elapsed to sort all columns in entire matrix    with openmp is %15llu ns\n", (long long unsigned)time_sorto);
   
@@ -58,12 +59,13 @@ void main()
     for ( j = 0; j < N; j++ )
       A[i][j] = rand()%100 - 50;
 
-  PrintArray(A);
+  //PrintArray(A);
   
+  // sort sequentially
   for (i = 0; i < N-1; i++ )
     RowSort_sequential( A, i );
   
-  PrintArray(A);
+  //PrintArray(A);
   
   printf("Time elapsed to sort all columns in entire matrix without openmp is %15llu ns\n", (long long unsigned)time_sorts);
 
@@ -75,7 +77,7 @@ void main()
   return;
 }
 
-void Merge(int *array,int *left_array, int leftCount, int *right_array, int rightCount, int *idx, int *left_idx, int *right_idx)
+void Merge(int *array,int *left_array, int leftCount, int *right_array, int rightCount, int *idx, int *left_idx, int *right_idx) //Merge two array together in order
 {
 	int lp,rp,ap;
   
@@ -85,7 +87,7 @@ void Merge(int *array,int *left_array, int leftCount, int *right_array, int righ
 
 
 	while( (lp < leftCount) && (rp < rightCount)) {
-		if(left_array[lp] < right_array[rp]) {
+		if(left_array[lp] > right_array[rp]) {
       array[ap] = left_array[lp];
       idx[ap] = left_idx[lp];
       ap = ap + 1;
@@ -130,30 +132,32 @@ void MergeSort(int *array, int *idx, int n)
 	right_idx = (int*)malloc((n- mid)*sizeof(int)); 
 	
 	for(i = 0;i<mid;i++) {
-    left_array[i] = array[i]; // creating left subarray
-    left_idx[i] = idx[i];
+    left_array[i] = array[i]; // generate left subarray
+    left_idx[i] = idx[i];     // generate left index subarray 
   }
   
 	for(i = mid;i<n;i++) {
-    right_array[i-mid] = array[i]; // creating right subarray
-    right_idx[i-mid] = idx[i];
+    right_array[i-mid] = array[i]; // generate right subarray
+    right_idx[i-mid] = idx[i];     // generate right index subarray 
   }
   
-  MergeSort(left_array, left_idx, mid);  // sorting the left subarray
-  MergeSort(right_array, right_idx, n-mid);  // sorting the right subarray
+  MergeSort(left_array, left_idx, mid);        //recursively mergesort two subarrays
+  MergeSort(right_array, right_idx, n-mid);  
   
-	Merge(array, left_array, mid, right_array, n-mid, idx, left_idx, right_idx);  // Merging L and R into A as sorted list.
+	Merge(array, left_array, mid, right_array, n-mid, idx, left_idx, right_idx); // Merge two subarray together in order
   
   free(left_array);
   free(right_array);
   
   free(left_idx);
   free(right_idx);
+  
+  return;
 }
 
 void MergeSort_omp(int *array, int *idx, int n, int ava_num_threads)
 { 
-  if (ava_num_threads < 2) {
+  if (ava_num_threads < 2) {           // check if we have enough free threads to start parallel jobs
     MergeSort(array, idx, n);
     return;
   }
@@ -173,27 +177,27 @@ void MergeSort_omp(int *array, int *idx, int n, int ava_num_threads)
 	right_idx = (int*)malloc((n- mid)*sizeof(int)); 
 	
 	for(i = 0;i<mid;i++) {
-    left_array[i] = array[i]; // creating left subarray
+    left_array[i] = array[i]; 
     left_idx[i] = idx[i];
   }
   
 	for(i = mid;i<n;i++) {
-    right_array[i-mid] = array[i]; // creating right subarray
+    right_array[i-mid] = array[i]; 
     right_idx[i-mid] = idx[i];
   }
   
   omp_set_dynamic(0);
   omp_set_nested(1);
   
-  #pragma omp parallel sections 
+  #pragma omp parallel sections                       // create parallel sections
   {
     #pragma omp section
-    MergeSort_omp(left_array, left_idx, mid, ava_num_threads/2);  // sorting the left subarray
+    MergeSort_omp(left_array, left_idx, mid, ava_num_threads/2);  
     #pragma omp section
-    MergeSort_omp(right_array, right_idx, n-mid, ava_num_threads-ava_num_threads/2);  // sorting the right subarray
+    MergeSort_omp(right_array, right_idx, n-mid, ava_num_threads-ava_num_threads/2);  
   }
   
-  Merge(array, left_array, mid, right_array, n-mid, idx, left_idx, right_idx);  // Merging L and R into A as sorted list.
+  Merge(array, left_array, mid, right_array, n-mid, idx, left_idx, right_idx); 
   
   free(left_array);
   free(right_array);
@@ -251,10 +255,12 @@ void RowSort_sequential(int **A, int row)
 {
   int i, j;
   
+  // generate index array
   int idx[N-row];
   for ( i = 0; i < N-row; i++ )
     idx[i] = i + row;
   
+  // get a copy of column array to sort
   int array[N-row];
   for ( i = 0; i < N-row; i++ )
     array[i] = A[i+row][row];
@@ -270,6 +276,7 @@ void RowSort_sequential(int **A, int row)
   diff = BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
   time_sorts = time_sorts + diff;
   
+  // sort the 2-d array based on the result of column sorting
   for ( i = row; i < N; i++ )
   	for ( j = 0; j < N; j++ )
   		temp[i][j] = A[i][j]; 

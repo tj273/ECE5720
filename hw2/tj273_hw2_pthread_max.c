@@ -83,21 +83,21 @@ void main()
 
 void *FindMax(void *thr_arg) {
     int i, j;
-    int max_row_num;
+    int max_row_num;                            // in thread local index of row that holds maximum absolute value in the column
     
     struct thread_data *thr_data;
     thr_data = (struct thread_data *) thr_arg;
     
     max_row_num = thr_data->st;
 
-    for (i = thr_data->st; i <= thr_data->ed; i++)
+    for (i = thr_data->st; i <= thr_data->ed; i++)  // compare and get the index of row for max abs value
       if ( abs(A[i][thr_data->column_num]) > abs(A[max_row_num][thr_data->column_num]) )
         max_row_num = i;
     
-    pthread_mutex_lock (&mutexcomp);
+    pthread_mutex_lock (&mutexcomp);           // lock mutex before writing shared area
     if ( abs(A[max_row_num][thr_data->column_num]) > abs(A[maxrow][thr_data->column_num]) )
       maxrow = max_row_num;
-    pthread_mutex_unlock (&mutexcomp);
+    pthread_mutex_unlock (&mutexcomp);         // unlock mutex
     
     pthread_exit(NULL);
 }
@@ -127,6 +127,7 @@ void RowSwitch_pthread(int **A, int row) {
   clock_gettime(CLOCK_MONOTONIC, &start);	/* mark start time */
   
   for ( i = 0; i < thread_num; i++ ) {
+    // generate data for argument struct for thread
     thread_data_array[i].st = row + i * (N-row)/thread_num;
     thread_data_array[i].ed = thread_data_array[i].st + (N-row)/thread_num -1;
     if ( i >= thread_num - (N-row)%thread_num )
@@ -140,6 +141,7 @@ void RowSwitch_pthread(int **A, int row) {
   
   pthread_attr_destroy(&attr);
   
+  // wait all thread to terminate
   for(i = 0; i < thread_num; i++)
   {
     pthread_join(pthrd_id[i], &status);
@@ -151,6 +153,7 @@ void RowSwitch_pthread(int **A, int row) {
   
   pthread_mutex_destroy(&mutexcomp);
   
+  // do permutation
   if ( row != maxrow )
     for ( i = 0; i < N; i++ ) {
      	temp = A[row][i];
